@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from .core.config import settings
-from .routers import ingest   
+from .routers import ingest, ask
+
+
 
 app = FastAPI(
     title="RAG Pro API",
@@ -19,3 +21,4 @@ def health():
 
 # Routers
 app.include_router(ingest.router)
+app.include_router(ask.router)
