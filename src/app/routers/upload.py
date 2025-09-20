@@ -9,9 +9,12 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 @router.post("/")
 async def upload_file(file: UploadFile = File(...)):
-    if not file.filename.endswith(".txt"):
-        raise HTTPException(status_code=400, detail="Only .txt files are supported")
+    # Allow TXT and PDF
+    ext = file.filename.split(".")[-1].lower()
+    if ext not in ["txt", "pdf"]:
+        raise HTTPException(status_code=400, detail="Only .txt and .pdf files are supported")
 
+    # Save file to uploads folder
     file_path = UPLOAD_DIR / file.filename
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)

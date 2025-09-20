@@ -3,58 +3,55 @@ import requests
 
 API_URL = "http://localhost:8000"
 
-st.set_page_config(page_title="RAG Pro", layout="centered")
-st.title("📚 RAG Pro — Simple UI")
+st.set_page_config(page_title="RAG Chat", page_icon="🤖", layout="centered")
 
-# --- Upload section ---
-st.header("0. Upload a TXT File")
-uploaded_file = st.file_uploader("Choose a TXT file", type=["txt"])
+# --- Header ---
+st.markdown("<h1 style='text-align: center;'>🤖 RAG Chat</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: gray;'>Ask questions directly about your uploaded documents</p>", unsafe_allow_html=True)
 
-uploaded_filename = None
-if uploaded_file is not None:
+# --- Chat state ---
+if "messages" not in st.session_state:
+    st.session_state["messages"] = []
+
+# --- Display chat history (no sources shown) ---
+for role, content, _ in st.session_state["messages"]:
+    with st.chat_message(role):
+        st.markdown(content)
+
+# --- Chat input with placeholder ---
+query = st.text_input(
+    label="",
+    placeholder="💬 Write your question here...",
+    key="chatbox"
+)
+
+# --- Upload icon just below input ---
+uploaded_file = st.file_uploader("📂", type=["txt", "pdf"], label_visibility="collapsed")
+if uploaded_file:
     files = {"file": (uploaded_file.name, uploaded_file.getvalue())}
-    try:
-        resp = requests.post(f"{API_URL}/api/v1/upload/", files=files)
-        if resp.status_code == 200:
-            data = resp.json()
-            uploaded_filename = data["filename"]
-            st.success(f"Uploaded file: {data['filename']}")
-            st.info(f"Saved to server: {data['path']}")
+    resp = requests.post(f"{API_URL}/api/v1/upload/", files=files)
+    if resp.status_code == 200:
+        ingest_resp = requests.post(f"{API_URL}/api/v1/ingest/", json={"folder_path": "data/uploads"})
+        if ingest_resp.status_code == 200:
+            data = ingest_resp.json()
+            st.toast(f"✅ {uploaded_file.name} uploaded & ingested")
         else:
-            st.error(f"Error: {resp.text}")
-    except Exception as e:
-        st.error(f"Upload failed: {e}")
-
-# --- Ingest section ---
-#st.header("1. Ingest Uploaded File(s)")
-if st.button("Ingest Uploaded Files"):
-    try:
-        resp = requests.post(f"{API_URL}/api/v1/ingest/", json={"folder_path": "data/uploads"})
-        if resp.status_code == 200:
-            data = resp.json()
-            st.success(f"Ingested {data['processed_docs']} docs, {data['chunks_indexed']} chunks indexed.")
-        else:
-            st.error(f"Error: {resp.text}")
-    except Exception as e:
-        st.error(f"Ingest failed: {e}")
-
-# --- Ask section ---
-st.header("2. Ask a Question")
-query = st.text_input("Enter your question:")
-
-if st.button("Ask"):
-    if not query:
-        st.warning("Please enter a question.")
+            st.toast("⚠️ Upload ok, ingest failed")
     else:
-        try:
-            resp = requests.post(f"{API_URL}/api/v1/ask/", json={"query": query})
-            if resp.status_code == 200:
-                data = resp.json()
-                st.subheader("Answer")
-                st.write(data["answer"])
-                st.subheader("Sources")
-                st.write(", ".join(data["sources"]))
-            else:
-                st.error(f"Error: {resp.text}")
-        except Exception as e:
-            st.error(f"Request failed: {e}")
+        st.toast("❌ Upload failed")
+
+# --- Process user query ---
+if query:
+    st.chat_message("user").markdown(query)
+    st.session_state["messages"].append(("user", query, None))
+
+    resp = requests.post(f"{API_URL}/api/v1/ask/", json={"query": query})
+    if resp.status_code == 200:
+        data = resp.json()
+        answer = data["answer"]
+        with st.chat_message("assistant"):
+            st.markdown(answer)
+        st.session_state["messages"].append(("assistant", answer, None))
+    else:
+        with st.chat_message("assistant"):
+            st.error("⚠️ Error from backend")
