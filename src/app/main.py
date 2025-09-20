@@ -1,16 +1,13 @@
 from fastapi import FastAPI
 from .core.config import settings
-from .routers import ingest, ask
-
-
+from .routers import ingest, ask, upload   
 
 app = FastAPI(
     title="RAG Pro API",
     version="0.1.0",
-    description="RAG system with FastAPI",
+    description="RAG system with FastAPI, FAISS, and OpenAI",
 )
 
-# Health endpoint
 @app.get("/health")
 def health():
     return {
@@ -22,3 +19,4 @@ def health():
 # Routers
 app.include_router(ingest.router)
 app.include_router(ask.router)
+app.include_router(upload.router)   

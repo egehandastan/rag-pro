@@ -1,0 +1,7 @@
+Yapay zeka (Artificial Intelligence, AI), bilgisayar sistemlerinin insan zekasını taklit edebilecek görevleri gerçekleştirme kapasitesidir. 
+Bu görevler arasında öğrenme, akıl yürütme, problem çözme, algılama ve doğal dil işleme bulunur. 
+
+Makine öğrenmesi (Machine Learning), yapay zekanın bir alt dalıdır. 
+Bu alanda, bilgisayarlar verilerden öğrenerek performanslarını zamanla geliştirir. 
+Derin öğrenme (Deep Learning) ise makine öğrenmesinin özel bir alanıdır ve yapay sinir ağları kullanılarak daha karmaşık problemler çözülür. 
+
